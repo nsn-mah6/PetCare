@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background"
+    tools:context=".Auth.ForgotPage">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="10dp"
+        android:layout_gravity="center">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_header"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="8dp"
+            app:cardCornerRadius="12dp"
+            app:strokeColor="@color/Button"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="#00041600">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Forgot Password"
+                android:textColor="@color/heading_text"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:layout_marginTop="15dp"
+                android:layout_marginLeft="16dp"/>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="430dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="5dp">
+
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/CustomTextInputLayout"
+                    android:layout_width="350dp"
+                    android:layout_height="60dp"
+                    app:boxStrokeColor="@color/white"
+                    app:boxStrokeErrorColor="@color/error_color"
+                    android:textColorHint="@color/text">
+
+                    <EditText
+                        android:id="@+id/forgot_txt_email"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter Your Email"
+                        android:textSize="15sp"
+                        android:inputType="textEmailAddress"
+                        android:textColorHint="@color/text"
+                        android:textColor="@color/text"/>
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <Button
+                    android:id="@+id/forgot_btn"
+                    android:layout_width="350dp"
+                    android:layout_height="60dp"
+                    android:text="Get Email"
+                    android:layout_marginTop="22dp"
+                    android:textSize="22sp"
+                    android:textColor="@color/white"
+                    android:backgroundTint="@color/Button"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="70dp"
+                    android:gravity="center"
+                    android:padding="5dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Remembered Password?"
+                        android:textColor="@color/second_text"
+                        android:textSize="14dp" />
+
+                    <TextView
+                        android:id="@+id/forgot_txt_login"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="5dp"
+                        android:text="LogIn"
+                        android:textStyle="bold"
+                        android:textColor="@color/Button"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>
