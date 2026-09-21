@@ -40,6 +40,7 @@
                 android:id="@+id/et_pet_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColorHint="@color/text"
                 android:inputType="text" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -58,6 +59,7 @@
                 android:id="@+id/et_pet_species"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColorHint="@color/text"
                 android:inputType="text" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -76,6 +78,7 @@
                 android:id="@+id/et_pet_breed"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColorHint="@color/text"
                 android:inputType="text" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -94,6 +97,7 @@
                 android:id="@+id/et_pet_age"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColorHint="@color/text"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -112,6 +116,7 @@
                 android:id="@+id/et_pet_weight"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColorHint="@color/text"
                 android:inputType="numberDecimal" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -130,6 +135,7 @@
                 android:id="@+id/et_pet_diet"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColorHint="@color/text"
                 android:inputType="text" />
         </com.google.android.material.textfield.TextInputLayout>
 

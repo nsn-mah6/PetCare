@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.petcare.AddLocation;
 import com.example.petcare.Adapter.LocationAdapter;
+import com.example.petcare.MapActivity;
 import com.example.petcare.R;
 import com.example.petcare.data.entity.Location;
 import com.example.petcare.data.repository.PetCareRepository;
@@ -51,11 +52,17 @@ public class LocationsFragment extends Fragment {
         sessionManager = new SessionManager(requireContext());
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new LocationAdapter(locationList, requireContext());
+        adapter = new LocationAdapter(locationList, requireContext(), this::loadLocations);
         recyclerView.setAdapter(adapter);
+        adapter.attachToRecyclerView(recyclerView);
 
         fabAdd.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), AddLocation.class);
+            startActivity(intent);
+        });
+
+        view.findViewById(R.id.btn_open_map).setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), MapActivity.class);
             startActivity(intent);
         });
     }

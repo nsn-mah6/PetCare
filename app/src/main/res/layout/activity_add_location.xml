@@ -42,6 +42,7 @@
                     app:tint="@color/Button" />
 
                 <TextView
+                    android:id="@+id/tv_location_header_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -81,6 +82,7 @@
                 android:layout_height="wrap_content"
                 android:inputType="text"
                 android:maxLines="1"
+                android:textColorHint="@color/text"
                 android:textColor="@color/text"/>
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -101,6 +103,7 @@
                 android:layout_height="wrap_content"
                 android:inputType="text"
                 android:maxLines="1"
+                android:textColorHint="@color/text"
                 android:textColor="@color/text"/>
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -121,6 +124,7 @@
                 android:layout_height="wrap_content"
                 android:inputType="textPostalAddress"
                 android:gravity="top"
+                android:textColorHint="@color/text"
                 android:textColor="@color/text"/>
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -181,6 +185,27 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_map_container"
+            android:layout_width="0dp"
+            android:layout_height="250dp"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/card_coordinates_display">
+
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/map"
+                android:name="com.google.android.gms.maps.SupportMapFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context=".AddLocation" />
+        </com.google.android.material.card.MaterialCardView>
+
         <Button
             android:id="@+id/btn_save_location_final"
             android:layout_width="0dp"
@@ -194,7 +219,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/card_coordinates_display"
+            app:layout_constraintTop_toBottomOf="@+id/card_map_container"
             app:layout_constraintVertical_bias="1.0" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

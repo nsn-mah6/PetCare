@@ -31,7 +31,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.CancellationTokenSource;
 
-public class AddLocation extends AppCompatActivity implements OnMapReadyCallback {
+public class EditLocationActivity extends AppCompatActivity implements OnMapReadyCallback {
     EditText etName, etAddress, etType;
     Button btnGetCurrentLocation, btnSave;
     TextView tvCoordinates, tvTitle;
@@ -40,6 +40,8 @@ public class AddLocation extends AppCompatActivity implements OnMapReadyCallback
     FusedLocationProviderClient fusedLocationClient;
     double latitude = 0.0;
     double longitude = 0.0;
+    int locationId;
+    Location currentLocation;
     private final CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
     private GoogleMap mMap;
 
@@ -48,6 +50,8 @@ public class AddLocation extends AppCompatActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_add_location);
+
+        locationId = getIntent().getIntExtra("LOCATION_ID", -1);
         
         View mainView = findViewById(R.id.main);
         if (mainView != null) {
@@ -76,6 +80,31 @@ public class AddLocation extends AppCompatActivity implements OnMapReadyCallback
             mapFragment.getMapAsync(this);
         }
 
+        if (tvTitle != null) tvTitle.setText("Edit Saved Location");
+        btnSave.setText("Update Location Details");
+
+        repository.getLocationById(locationId, loc -> {
+            if (loc == null) {
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Location not found", Toast.LENGTH_SHORT).show();
+                    finish();
+                });
+                return;
+            }
+            currentLocation = loc;
+            runOnUiThread(() -> {
+                etName.setText(loc.getName());
+                etType.setText(loc.getType());
+                etAddress.setText(loc.getAddress());
+                latitude = loc.getLatitude();
+                longitude = loc.getLongitude();
+                tvCoordinates.setText(String.format("Lat: %.4f, Lng: %.4f", latitude, longitude));
+                findViewById(R.id.card_coordinates_display).setVisibility(View.VISIBLE);
+                findViewById(R.id.card_map_container).setVisibility(View.VISIBLE);
+                updateMapMarker();
+            });
+        });
+
         btnGetCurrentLocation.setOnClickListener(v -> {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -89,6 +118,11 @@ public class AddLocation extends AppCompatActivity implements OnMapReadyCallback
         });
 
         btnSave.setOnClickListener(v -> {
+            if (currentLocation == null) {
+                Toast.makeText(this, "Still loading data...", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             String name = etName.getText().toString().trim();
             String type = etType.getText().toString().trim();
             String address = etAddress.getText().toString().trim();
@@ -98,22 +132,15 @@ public class AddLocation extends AppCompatActivity implements OnMapReadyCallback
                 return;
             }
 
-            Location location = new Location(
-                    sessionManager.getUserId(),
-                    name,
-                    type.isEmpty() ? "Pet Clinic" : type,
-                    address.isEmpty() ? "Captured via GPS" : address,
-                    latitude,
-                    longitude
-            );
+            currentLocation.setName(name);
+            currentLocation.setType(type.isEmpty() ? "Pet Clinic" : type);
+            currentLocation.setAddress(address.isEmpty() ? "Captured via GPS" : address);
+            currentLocation.setLatitude(latitude);
+            currentLocation.setLongitude(longitude);
 
-            repository.insertLocation(location, id -> runOnUiThread(() -> {
-                if (id > 0) {
-                    Toast.makeText(AddLocation.this, "Location Saved Successfully", Toast.LENGTH_SHORT).show();
-                    finish();
-                } else {
-                    Toast.makeText(AddLocation.this, "Failed to save location", Toast.LENGTH_SHORT).show();
-                }
+            repository.updateLocation(currentLocation, () -> runOnUiThread(() -> {
+                Toast.makeText(EditLocationActivity.this, "Location Updated Successfully", Toast.LENGTH_SHORT).show();
+                finish();
             }));
         });
     }
@@ -121,8 +148,16 @@ public class AddLocation extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
-        LatLng initial = new LatLng(0, 0);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initial, 1));
+        updateMapMarker();
+    }
+
+    private void updateMapMarker() {
+        if (mMap != null && latitude != 0.0) {
+            LatLng latLng = new LatLng(latitude, longitude);
+            mMap.clear();
+            mMap.addMarker(new MarkerOptions().position(latLng).title("Selected Spot"));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+        }
     }
 
     private void fetchLocation() {
@@ -136,37 +171,18 @@ public class AddLocation extends AppCompatActivity implements OnMapReadyCallback
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cancellationTokenSource.getToken())
                 .addOnSuccessListener(this, location -> {
                     if (location != null) {
-                        updateUIWithLocation(location);
+                        latitude = location.getLatitude();
+                        longitude = location.getLongitude();
+                        tvCoordinates.setText(String.format("Lat: %.4f, Lng: %.4f", latitude, longitude));
+                        findViewById(R.id.card_coordinates_display).setVisibility(View.VISIBLE);
+                        findViewById(R.id.card_map_container).setVisibility(View.VISIBLE);
+                        updateMapMarker();
                         Toast.makeText(this, "Location detected!", Toast.LENGTH_SHORT).show();
-                    } else {
-                        fusedLocationClient.getLastLocation().addOnSuccessListener(this, lastLoc -> {
-                            if (lastLoc != null) {
-                                updateUIWithLocation(lastLoc);
-                                Toast.makeText(this, "Location detected (Last Known)", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(this, "Ensure GPS is ON and try again.", Toast.LENGTH_LONG).show();
-                            }
-                        });
                     }
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
-    }
-
-    private void updateUIWithLocation(android.location.Location location) {
-        latitude = location.getLatitude();
-        longitude = location.getLongitude();
-        tvCoordinates.setText(String.format("Lat: %.4f, Lng: %.4f", latitude, longitude));
-        findViewById(R.id.card_coordinates_display).setVisibility(View.VISIBLE);
-        findViewById(R.id.card_map_container).setVisibility(View.VISIBLE);
-
-        if (mMap != null) {
-            LatLng latLng = new LatLng(latitude, longitude);
-            mMap.clear();
-            mMap.addMarker(new MarkerOptions().position(latLng).title("Current Spot"));
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
-        }
     }
 
     @Override

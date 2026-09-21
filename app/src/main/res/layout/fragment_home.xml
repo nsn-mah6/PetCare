@@ -95,7 +95,7 @@
         android:layout_width="380dp"
         android:layout_height="160dp"
         android:layout_marginTop="28dp"
-        android:src="@drawable/cat"
+        android:src="@drawable/banner"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.487"
         app:layout_constraintStart_toStartOf="parent"

@@ -47,8 +47,9 @@ public class MypetFragment extends Fragment {
 
         // Use clean LinearLayoutManager layout style
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new PetAdapter(petList, requireContext());
+        adapter = new PetAdapter(petList, requireContext(), this::loadAllPets);
         recyclerView.setAdapter(adapter);
+        adapter.attachToRecyclerView(recyclerView);
     }
 
     @Override

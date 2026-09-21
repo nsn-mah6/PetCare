@@ -1,6 +1,7 @@
 package com.example.petcare.Adapter;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -9,7 +10,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.petcare.Pet_Details;
 import com.example.petcare.R;
@@ -21,11 +24,47 @@ public class PetAdapter extends RecyclerView.Adapter<PetAdapter.PetViewHolder> {
     private final List<Pet> petList;
     private final Context context;
     private final PetCareRepository repository;
+    private final Runnable onRefreshNeeded;
 
-    public PetAdapter(List<Pet> petList, Context context) {
+    public PetAdapter(List<Pet> petList, Context context, Runnable onRefreshNeeded) {
         this.petList = petList;
         this.context = context;
+        this.onRefreshNeeded = onRefreshNeeded;
         this.repository = new PetCareRepository(context);
+    }
+
+    public void attachToRecyclerView(RecyclerView recyclerView) {
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                Pet pet = petList.get(position);
+
+                if (direction == ItemTouchHelper.LEFT) {
+                    new AlertDialog.Builder(context)
+                            .setTitle("Delete Pet")
+                            .setMessage("Are you sure you want to delete " + pet.getName() + "? This will also remove all their care routines.")
+                            .setPositiveButton("Delete", (dialog, which) -> {
+                                repository.deletePet(pet, () -> {
+                                    if (context instanceof Activity) {
+                                        ((Activity) context).runOnUiThread(() -> {
+                                            Toast.makeText(context, "Pet Removed", Toast.LENGTH_SHORT).show();
+                                            if (onRefreshNeeded != null) onRefreshNeeded.run();
+                                        });
+                                    }
+                                });
+                            })
+                            .setNegativeButton("Cancel", (dialog, which) -> notifyItemChanged(position))
+                            .show();
+                }
+            }
+        });
+        itemTouchHelper.attachToRecyclerView(recyclerView);
     }
 
     @NonNull
@@ -63,10 +102,10 @@ public class PetAdapter extends RecyclerView.Adapter<PetAdapter.PetViewHolder> {
             try {
                 holder.ivProfile.setImageURI(Uri.parse(pet.getImageUri()));
             } catch (Exception e) {
-                holder.ivProfile.setImageResource(R.drawable.cat);
+                holder.ivProfile.setImageResource(R.drawable.banner);
             }
         } else {
-            holder.ivProfile.setImageResource(R.drawable.cat);
+            holder.ivProfile.setImageResource(R.drawable.banner);
         }
 
         holder.itemView.setOnClickListener(v -> {

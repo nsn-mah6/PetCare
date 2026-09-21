@@ -54,8 +54,9 @@ public class HomeFragment extends Fragment {
         txtWelcome.setText("Hello, " + sessionManager.getUserName() + " 👋");
 
         recyclerPets.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new PetAdapter(petList, requireContext());
+        adapter = new PetAdapter(petList, requireContext(), this::loadPets);
         recyclerPets.setAdapter(adapter);
+        adapter.attachToRecyclerView(recyclerPets);
 
         fabAddPet.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), Create_Pets.class);

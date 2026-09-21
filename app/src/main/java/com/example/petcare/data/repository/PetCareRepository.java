@@ -165,6 +165,13 @@ public class PetCareRepository {
         });
     }
 
+    public void getLocationById(int locationId, Callback<Location> callback) {
+        executor.execute(() -> {
+            Location location = locationDao.getLocationById(locationId);
+            if (callback != null) callback.onResult(location);
+        });
+    }
+
     public void getLocationsForUser(int userId, Callback<List<Location>> callback) {
         executor.execute(() -> {
             List<Location> locations = locationDao.getLocationsForUser(userId);
