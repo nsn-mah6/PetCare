@@ -105,7 +105,7 @@ public class LoginPage extends AppCompatActivity {
                                     }));
                                 } else {
                                     login.setEnabled(true);
-                                    Toast.makeText(LoginPage.this, "Login failed: User record empty", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(LoginPage.this, "Login failed: Invalid Email or Password", Toast.LENGTH_SHORT).show();
                                 }
                             } else {
                                 login.setEnabled(true);
