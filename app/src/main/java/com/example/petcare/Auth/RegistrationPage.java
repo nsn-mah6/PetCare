@@ -12,14 +12,17 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.petcare.R;
-import com.example.petcare.data.entity.User;
 import com.example.petcare.data.repository.PetCareRepository;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 
 public class RegistrationPage extends AppCompatActivity {
     EditText email, password, cpassword;
     TextView login;
     Button register;
     PetCareRepository repository;
+    FirebaseAuth firebaseAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +37,7 @@ public class RegistrationPage extends AppCompatActivity {
         login = findViewById(R.id.register_txt_login);
 
         repository = new PetCareRepository(this);
+        firebaseAuth = FirebaseAuth.getInstance();
 
         login.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,29 +71,43 @@ public class RegistrationPage extends AppCompatActivity {
                     return;
                 }
 
-                repository.getUserByEmail(Email, new PetCareRepository.Callback<User>() {
-                    @Override
-                    public void onResult(User existingUser) {
-                        if (existingUser != null) {
-                            runOnUiThread(() -> Toast.makeText(RegistrationPage.this, "User already exists with this email", Toast.LENGTH_SHORT).show());
-                        } else {
-                            String fullName = Email.split("@")[0]; // Use prefix as Name for prototype
-                            fullName = fullName.substring(0, 1).toUpperCase() + fullName.substring(1);
-                            User newUser = new User(fullName, Email, Password);
-                            repository.insertUser(newUser, new PetCareRepository.Callback<Long>() {
-                                @Override
-                                public void onResult(Long newId) {
-                                    runOnUiThread(() -> {
+                register.setEnabled(false);
+
+                String initialName = Email.split("@")[0];
+                final String fullName = initialName.substring(0, 1).toUpperCase() + initialName.substring(1);
+
+                firebaseAuth.createUserWithEmailAndPassword(Email, Password)
+                        .addOnCompleteListener(RegistrationPage.this, task -> {
+                            if (task.isSuccessful()) {
+                                FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+                                if (firebaseUser != null) {
+                                    String uid = firebaseUser.getUid();
+
+                                    UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                            .setDisplayName(fullName)
+                                            .build();
+                                    firebaseUser.updateProfile(profileUpdates);
+
+                                    // Save in Firebase Database
+                                    repository.saveUserToFirebaseDatabase(uid, fullName, Email);
+
+                                    // Sync in Room DB for local relations
+                                    repository.syncFirebaseUser(uid, fullName, Email, localUser -> runOnUiThread(() -> {
                                         Toast.makeText(RegistrationPage.this, "Registration Successful", Toast.LENGTH_SHORT).show();
                                         Intent intent = new Intent(RegistrationPage.this, LoginPage.class);
                                         startActivity(intent);
                                         finish();
-                                    });
+                                    }));
+                                } else {
+                                    register.setEnabled(true);
+                                    Toast.makeText(RegistrationPage.this, "Registration failed: User missing", Toast.LENGTH_SHORT).show();
                                 }
-                            });
-                        }
-                    }
-                });
+                            } else {
+                                register.setEnabled(true);
+                                String errorMsg = (task.getException() != null) ? task.getException().getMessage() : "Registration Failed";
+                                Toast.makeText(RegistrationPage.this, errorMsg, Toast.LENGTH_LONG).show();
+                            }
+                        });
             }
         });
     }

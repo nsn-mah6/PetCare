@@ -13,9 +13,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.petcare.MainActivity;
 import com.example.petcare.R;
-import com.example.petcare.data.entity.User;
 import com.example.petcare.data.repository.PetCareRepository;
 import com.example.petcare.utils.SessionManager;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class LoginPage extends AppCompatActivity {
     EditText email, password;
@@ -23,6 +24,7 @@ public class LoginPage extends AppCompatActivity {
     Button login;
     PetCareRepository repository;
     SessionManager sessionManager;
+    FirebaseAuth firebaseAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,9 +40,10 @@ public class LoginPage extends AppCompatActivity {
 
         repository = new PetCareRepository(this);
         sessionManager = new SessionManager(this);
+        firebaseAuth = FirebaseAuth.getInstance();
 
-        // Check if user is already logged in
-        if (sessionManager.isLoggedIn()) {
+        // Check if user is already logged in with Firebase & SessionManager
+        if (firebaseAuth.getCurrentUser() != null && sessionManager.isLoggedIn()) {
             Intent intent = new Intent(LoginPage.this, MainActivity.class);
             startActivity(intent);
             finish();
@@ -58,7 +61,8 @@ public class LoginPage extends AppCompatActivity {
         forgotpassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(LoginPage.this, "Password reset prototype: Use Room Database login.", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getApplicationContext(), ForgotPage.class);
+                startActivity(intent);
             }
         });
 
@@ -70,28 +74,45 @@ public class LoginPage extends AppCompatActivity {
 
                 if (Email.isEmpty()){
                     Toast.makeText(LoginPage.this, "Please Enter Email", Toast.LENGTH_SHORT).show();
+                    return;
                 }
-                else if (Password.isEmpty()){
+                if (Password.isEmpty()){
                     Toast.makeText(LoginPage.this, "Please Enter Password", Toast.LENGTH_SHORT).show();
+                    return;
                 }
-                else {
-                    repository.login(Email, Password, new PetCareRepository.Callback<User>() {
-                        @Override
-                        public void onResult(User user) {
-                            runOnUiThread(() -> {
-                                if (user != null) {
-                                    sessionManager.createLoginSession(user.getUserId(), user.getFullName(), user.getEmail());
-                                    Toast.makeText(LoginPage.this, "Login Successful", Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(LoginPage.this, MainActivity.class);
-                                    startActivity(intent);
-                                    finish();
+
+                login.setEnabled(false);
+
+                firebaseAuth.signInWithEmailAndPassword(Email, Password)
+                        .addOnCompleteListener(LoginPage.this, task -> {
+                            if (task.isSuccessful()) {
+                                FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+                                if (firebaseUser != null) {
+                                    String uid = firebaseUser.getUid();
+                                    String displayName = firebaseUser.getDisplayName();
+                                    if (displayName == null || displayName.isEmpty()) {
+                                        String initialName = Email.split("@")[0];
+                                        displayName = initialName.substring(0, 1).toUpperCase() + initialName.substring(1);
+                                    }
+                                    String finalName = displayName;
+
+                                    repository.syncFirebaseUser(uid, finalName, Email, localUser -> runOnUiThread(() -> {
+                                        sessionManager.createLoginSession(localUser.getUserId(), localUser.getFullName(), localUser.getEmail());
+                                        Toast.makeText(LoginPage.this, "Login Successful", Toast.LENGTH_SHORT).show();
+                                        Intent intent = new Intent(LoginPage.this, MainActivity.class);
+                                        startActivity(intent);
+                                        finish();
+                                    }));
                                 } else {
-                                    Toast.makeText(LoginPage.this, "Invalid Email or Password", Toast.LENGTH_SHORT).show();
+                                    login.setEnabled(true);
+                                    Toast.makeText(LoginPage.this, "Login failed: User record empty", Toast.LENGTH_SHORT).show();
                                 }
-                            });
-                        }
-                    });
-                }
+                            } else {
+                                login.setEnabled(true);
+                                String errorMsg = (task.getException() != null) ? task.getException().getMessage() : "Invalid Email or Password";
+                                Toast.makeText(LoginPage.this, errorMsg, Toast.LENGTH_LONG).show();
+                            }
+                        });
             }
         });
     }

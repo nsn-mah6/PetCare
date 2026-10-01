@@ -11,7 +11,12 @@ import com.example.petcare.data.entity.Pet;
 import com.example.petcare.data.entity.CareTask;
 import com.example.petcare.data.entity.Location;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -53,6 +58,42 @@ public class PetCareRepository {
     public void login(String email, String password, Callback<User> callback) {
         executor.execute(() -> {
             User user = userDao.login(email, password);
+            if (callback != null) callback.onResult(user);
+        });
+    }
+
+    public void saveUserToFirebaseDatabase(String firebaseUid, String fullName, String email) {
+        executor.execute(() -> {
+            try {
+                DatabaseReference ref = FirebaseDatabase.getInstance().getReference("users").child(firebaseUid);
+                Map<String, Object> userData = new HashMap<>();
+                userData.put("uid", firebaseUid);
+                userData.put("fullName", fullName);
+                userData.put("email", email);
+                ref.setValue(userData);
+            } catch (Exception ignored) {}
+        });
+    }
+
+    public void syncFirebaseUser(String firebaseUid, String fullName, String email, Callback<User> callback) {
+        executor.execute(() -> {
+            User user = userDao.getUserByFirebaseUid(firebaseUid);
+            if (user == null) {
+                user = userDao.getUserByEmail(email);
+            }
+
+            if (user != null) {
+                user.setFirebaseUid(firebaseUid);
+                if (fullName != null && !fullName.isEmpty()) {
+                    user.setFullName(fullName);
+                }
+                userDao.updateUser(user);
+            } else {
+                user = new User(firebaseUid, (fullName != null && !fullName.isEmpty()) ? fullName : email.split("@")[0], email, "");
+                long id = userDao.insertUser(user);
+                user.setUserId((int) id);
+            }
+
             if (callback != null) callback.onResult(user);
         });
     }
