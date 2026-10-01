@@ -13,7 +13,7 @@ import com.example.petcare.data.entity.Pet;
 import com.example.petcare.data.entity.CareTask;
 import com.example.petcare.data.entity.Location;
 
-@Database(entities = {User.class, Pet.class, CareTask.class, Location.class}, version = 1, exportSchema = false)
+@Database(entities = {User.class, Pet.class, CareTask.class, Location.class}, version = 2, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
     private static volatile AppDatabase instance;
 
